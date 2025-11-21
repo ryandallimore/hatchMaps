@@ -1,5 +1,7 @@
 import mysql from "mysql2"
+import dotenv from "dotenv";
 
+dotenv.config();
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -21,7 +23,7 @@ const connection = mysql.createConnection({
   port: 3306
 });
 */
-
+/*
 pool.getConnection((err, connection) => {
     if (err) {
       console.error('Error connecting to MySQL:', err.stack);
@@ -29,5 +31,5 @@ pool.getConnection((err, connection) => {
     }
     console.log('Connected to MySQL as id ' + connection.threadId);
   });
-
+*/
 export default pool;

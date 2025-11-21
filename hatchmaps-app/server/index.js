@@ -3,7 +3,7 @@ const app = express();
 import dotenv from 'dotenv'; // Simplifies use of environment variables
 import router from './routes/routes.js';
 import mysql from 'mysql2';
-import temps from './scraper.js';
+import temps from './data_fetch.js';
 import cron from 'node-cron';
 import cors from 'cors';
 

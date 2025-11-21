@@ -71,7 +71,7 @@ function App() {
   const [dataFetchError, setDataFetchError] = useState(false);
 
   useEffect(() => {
-    axios.get('https://hatchmaps.com/temps')
+    axios.get('http://localhost:3000/temps')
       .then(response => {
         if (response.data && response.data.length > 0) {
           setTemps(response.data);
@@ -119,17 +119,17 @@ function App() {
     } else {
       // Use temperature data from backend
       processedSites = temps.map(temp => {
-        const matchingSite = sites[temp.idNum];
+        const matchingSite = sites[Number(temp.siteCode)];
         if (matchingSite) {
           const newBugsLikelyHatching = [];
           // Use the month from the temperature log
-          const monthNumber = temp.dateTime.substring(0, 2);
+          const monthNumber = temp.time.substring(5, 7);;
           Object.entries(matchingSite.bodyOfWater.bugs).forEach(([bugName, bugEntry]) => {
             const bug = bugEntry.bug;
             if (bug.hatchTemp && bug.hatchTemp.length === 2 && bugEntry.time[0].includes(monthNumber)) {
               const bottomTemp = bug.hatchTemp[0] - 2;
               const topTemp = bug.hatchTemp[1];
-              const farTemp = celcToFar(temp.temp);
+              const farTemp = celcToFar(temp.value);
               if (bottomTemp <= farTemp && farTemp <= topTemp) {
                 newBugsLikelyHatching.push(bug);
               }
@@ -137,8 +137,8 @@ function App() {
           });
           return {
             ...matchingSite,
-            temp: celcToFar(temp.temp),
-            recentLogTime: temp.dateTime,
+            temp: celcToFar(temp.value),
+            recentLogTime: temp.time,
             bugsHatching: newBugsLikelyHatching,
           };
         }

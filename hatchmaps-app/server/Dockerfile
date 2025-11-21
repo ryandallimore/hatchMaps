@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Puppeteer
-RUN npm install puppeteer
+#RUN npm install puppeteer
 RUN npm install dotenv
 
 WORKDIR /app
@@ -44,9 +44,9 @@ RUN npm install
 COPY . .
 
 # Set environment variables for Puppeteer
-ENV PUPPETEER_SKIP_DOWNLOAD=true
+#ENV PUPPETEER_SKIP_DOWNLOAD=true
 ENV CHROME_PATH=/usr/bin/chromium-browser
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+#ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 # Open the port for the express server
 EXPOSE 5000
 

@@ -1,6 +1,6 @@
 import React from 'react';
-import "./bootstrap.min.css";
-import "./custom.css";
+import "./css/bootstrap.min.css";
+import "./css/custom.css";
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import 'mapbox-gl/dist/mapbox-gl.css';

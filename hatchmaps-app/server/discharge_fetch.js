@@ -4,10 +4,10 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 // USGS NWIS Instantaneous Values (IV) service
-// Example water-quality parameter: 00400 => pH
+// Discharge parameter: 00060 => Discharge, cubic feet per second
 // stateCd=or => Oregon
 // siteStatus=all => include all sites (active/inactive)
-const USGS_WQ_URL = 'https://waterservices.usgs.gov/nwis/iv/?format=json&stateCd=or&parameterCd=00400&siteStatus=all';
+const USGS_DISCHARGE_URL = 'https://waterservices.usgs.gov/nwis/iv/?format=json&stateCd=or&parameterCd=00060&siteStatus=all';
 
 function fetchUSGS(url) {
   return new Promise((resolve, reject) => {
@@ -43,7 +43,7 @@ function fetchUSGS(url) {
   });
 }
 
-function extractLatestWaterQuality(nwisJson) {
+function extractLatestWaterDischarge(nwisJson) {
   if (!nwisJson || !nwisJson.value || !Array.isArray(nwisJson.value.timeSeries)) {
     return [];
   }
@@ -55,7 +55,7 @@ function extractLatestWaterQuality(nwisJson) {
       const siteName = siteInfo.siteName || 'Unknown site';
       const siteCode =
         (siteInfo.siteCode && siteInfo.siteCode[0] && siteInfo.siteCode[0].value) || 'Unknown code';
-      const varDesc = variable.variableDescription || 'Water quality';
+      const varDesc = variable.variableDescription || 'Water discharge';
 
       const geoLocation = (siteInfo.geoLocation && siteInfo.geoLocation.geogLocation) || {};
       const latitude = geoLocation.latitude ?? null;
@@ -95,7 +95,7 @@ function extractLatestWaterQuality(nwisJson) {
     .filter(Boolean);
 }
 
-async function waterQuality() {
+async function waterDischarge() {
   
   const connection = await mysql.createConnection({
     host: process.env.DB_HOST,
@@ -109,34 +109,34 @@ async function waterQuality() {
     port: process.env.DB_PORT,
     user: process.env.DB_USER,
     db: process.env.DB_NAME,
-  });
-  const deleteData = 'DELETE FROM quality_data';
+  }); 
+  const deleteData = 'DELETE FROM discharge_data';
   await connection.execute(deleteData);
   
   try {
-    console.log('Requesting latest water quality data (pH) for all USGS monitoring sites in Oregon...');
-    console.log(`GET quality: ${USGS_WQ_URL}`);
+    console.log('Requesting latest water discharge data for all USGS monitoring sites in Oregon...');
+    console.log(`GET discharge: ${USGS_DISCHARGE_URL}`);
 
-    const qualityJson = await fetchUSGS(USGS_WQ_URL);
-    const qualities = extractLatestWaterQuality(qualityJson);
+    const dischargeJson = await fetchUSGS(USGS_DISCHARGE_URL);
+    const discharges = extractLatestWaterDischarge(dischargeJson);
 
-    console.log(`\nFound ${qualities.length} sites with water quality data.\n`);
+    console.log(`\nFound ${discharges.length} sites with water discharge data.\n`);
 
-    for (let row of qualities) {
+    for (let row of discharges) {
       const {
         siteCode = null,
         siteName = null,
         time = null,
-        value: pH = null,
-        unit: pHUnit = null,
+        value: discharge = null,
+        unit: dischargeUnit = null,
       } = row || {};
 
       console.log(
-        `${siteCode} ${siteName} | pH=${pH} ${pHUnit || ''} at ${time}`
+        `${siteCode} ${siteName} | discharge=${discharge} ${dischargeUnit || ''} at ${time}`
       );
     }
     
-    for (let row of qualities) {
+    for (let row of discharges) {
       const {
         siteCode = null,
         siteName = null,
@@ -144,7 +144,7 @@ async function waterQuality() {
         value = null,
       } = row || {};
       console.log(siteCode, siteName, time, value);
-      const query = `INSERT INTO quality_data (siteCode, siteName, time, value) VALUES (?, ?, ?, ?)`;
+      const query = `INSERT INTO discharge_data (siteCode, siteName, time, value) VALUES (?, ?, ?, ?)`;
       await connection.execute(query, [
         siteCode ?? null,
         siteName ?? null,
@@ -153,14 +153,14 @@ async function waterQuality() {
       ]);
     }
   } catch (err) {
-    console.error('Error fetching USGS water quality data:', err.message || err);
+    console.error('Error fetching USGS water discharge data:', err.message || err);
     process.exitCode = 1;
   } finally {
     await connection.end();
   }
 }
 
-export default waterQuality;
+export default waterDischarge;
 
 console.log('DEBUG - import.meta.url:', import.meta.url);
 console.log('DEBUG - process.argv[1]:', process.argv[1]);
@@ -170,8 +170,8 @@ console.log('DEBUG - Match?', import.meta.url === `file://${process.argv[1]}`);
 const currentFileUrl = new URL(import.meta.url).pathname;
 const argvPath = process.argv[1].replace(/\\/g, '/');
 if (currentFileUrl.endsWith(argvPath) || import.meta.url === `file:///${process.argv[1].replace(/\\/g, '/')}`) {
-  waterQuality().catch((err) => {
-    console.error('waterQuality run failed:', err);
+  waterDischarge().catch((err) => {
+    console.error('waterDischarge run failed:', err);
     process.exitCode = 1;
   });
 }
